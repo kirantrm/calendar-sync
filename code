@@ -1,10 +1,9 @@
 function sync() {
 
   var id="XXXXXXXXXX"; // CHANGE - id of the secondary calendar to pull events from
-
-  var today=new Date();
+ var today=new Date();
   var enddate=new Date();
-  enddate.setDate(today.getDate()+60); // how many days in advance to monitor and block off time
+  enddate.setDate(today.getDate()+7); // how many days in advance to monitor and block off time
   
   var secondaryCal=CalendarApp.getCalendarById(id);
   var secondaryEvents=secondaryCal.getEvents(today,enddate);
@@ -26,8 +25,9 @@ function sync() {
   for (pev in primaryEvents)
   {
     var pEvent = primaryEvents[pev];
-    if (pEvent.getDescription(includes '- Synced') ){
-    { primaryEventsFiltered.push(pEvent); }
+    if (pEvent.getDescription().includes('- Synced')) { 
+     primaryEventsFiltered.push(pEvent); 
+    }
   }
   
   // process all events in secondary calendar
@@ -40,14 +40,14 @@ function sync() {
     for (existingEvent in primaryEventsFiltered)
       {
         var pEvent = primaryEventsFiltered[existingEvent];
-        var secondaryTitle = evi.getTitle();
-        var secondaryDesc = evi.getDescription();
-        secondaryDesc.find ('- Synced' setText (''))
         if ((pEvent.getStartTime().getTime()==evi.getStartTime().getTime()) && (pEvent.getEndTime().getTime()==evi.getEndTime().getTime()))
         {
           stat=0;
-          pEvent.setTitle(secondaryTitle);
-          pEvent.setDescription(secondaryDesc + '- Synced');
+          // var secondaryTitle = evi.getTitle();
+          // var secondaryDesc = evi.getDescription();
+          // pEvent.setTitle(secondaryTitle);
+          pEvent.setTitle("Busy - Synced")
+          pEvent.setDescription('Personal Event - Synced');
           // event.setDescription(evi.getTitle() + '\n\n' + evi.getDescription());
           pEvent.setVisibility(CalendarApp.Visibility.PRIVATE); // set blocked time as private appointments in work calendar
           primaryEventsUpdated.push(pEvent.getId());
@@ -64,14 +64,20 @@ function sync() {
     if (evi.isAllDayEvent())
     {
       continue; // Do nothing if the event is an all-day or multi-day event. This script only syncs hour-based events
+    } 
+    // skip unaccepted invites
+     if (evi.getMyStatus() == CalendarApp.GuestStatus.MAYBE || evi.getMyStatus() == CalendarApp.GuestStatus.INVITED) {
+      Logger.log('Ignoring unconfirmed event: ' + evi.getTitle() + '[' + evi.getMyStatus() + ']');
+      continue;
+    } else {
+      Logger.log('Event status: ' + evi.getTitle() + '[' + evi.getMyStatus() + ']');
     }
-    else if (n==1 || n==2 || n==3 || n==4 || n==5) // skip weekends. Delete this if you want to include weekends
+    if (n==1 || n==2 || n==3 || n==4 || n==5) // skip weekends. Delete this if you want to include weekends
     // if the secondary event does not exist in the primary calendar, create it
     {
       //var newEvent = primaryCal.createEvent(primaryEventTitle,evi.getStartTime(),evi.getEndTime()); // change the Booked text to whatever you would like your merged event titles to be
       // alternative version below that copies the exact secondary event information into the primary calendar event
-      var newEvent = primaryCal.createEvent(evi.getTitle(),evi.getStartTime(),evi.getEndTime(), {location: evi.getLocation(), description: evi.getDescription()});  
-      newEvent.setDescription(evi.getTitle() + '\n\n' + evi.getDescription());
+      var newEvent = primaryCal.createEvent("Busy - Synced",evi.getStartTime(),evi.getEndTime(), {location: evi.getLocation(), description: "Personal Event - Synced"});  
       newEvent.setVisibility(CalendarApp.Visibility.PRIVATE); // set blocked time as private appointments in work calendar
       newEvent.removeAllReminders(); // so you don't get double notifications. Delete this if you want to keep the default reminders for your newly created primary calendar events
       primaryEventsCreated.push(newEvent.getId());
@@ -92,6 +98,8 @@ function sync() {
       primaryEventsFiltered[pev].deleteEvent();
     }
   }  
+
+ 
 
   Logger.log('Primary events previously created: ' + primaryEventsFiltered.length);
   Logger.log('Primary events updated: ' + primaryEventsUpdated.length);

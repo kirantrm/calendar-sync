@@ -1,9 +1,10 @@
 function sync() {
 
-  var id="XXXXXXXXXX"; // CHANGE - id of the secondary calendar to pull events from
- var today=new Date();
+  var id="xyz@gmail.com"; // id of the secondary calendar to pull events from
+
+  var today=new Date();
   var enddate=new Date();
-  enddate.setDate(today.getDate()+7); // how many days in advance to monitor and block off time
+  enddate.setDate(today.getDate()+60); // how many days in advance to monitor and block off time
   
   var secondaryCal=CalendarApp.getCalendarById(id);
   var secondaryEvents=secondaryCal.getEvents(today,enddate);
